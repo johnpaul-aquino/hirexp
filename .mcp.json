@@ -1,0 +1,31 @@
+{
+    "mcpServers": {
+      "unsplash-mcp-server": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@smithery/cli@latest",
+          "run",
+          "@hellokaton/unsplash-mcp-server",
+          "--key",
+          "bbe79efa-c0ef-4db3-9215-83c50452efb2",
+          "--profile",
+          "zesty-moose-k8G0ry"
+        ]
+      },
+      "@magicuidesign/mcp": {
+        "command": "npx",
+        "args": ["-y", "@magicuidesign/mcp@latest"]
+      },
+      "shadcn": {
+        "command": "npx",
+        "args": ["shadcn@latest", "mcp"]
+      },
+      "playwright": {
+        "command": "npx",
+        "args": [
+          "@playwright/mcp@latest"
+        ]
+      }
+    }
+  }
