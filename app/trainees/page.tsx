@@ -40,7 +40,7 @@ const TraineePage = () => {
     const subject = encodeURIComponent('New Trainee Waitlist Registration - HireXp')
     const body = encodeURIComponent(`New trainee waitlist registration:
 
-Full Name: ${data.fullName}
+Full Name: ${data.name}
 Email: ${data.email}
 Phone: ${data.phone}
 English Level: ${data.englishLevel}
@@ -148,7 +148,7 @@ Submitted: ${new Date().toLocaleString()}`)
                 See What Your Dashboard Looks Like
               </h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Get a preview of the interactive dashboard you'll use to track your progress, complete modules, and earn your certificate
+                Get a preview of the interactive dashboard you&apos;ll use to track your progress, complete modules, and earn your certificate
               </p>
             </div>
           </BlurFade>
@@ -338,7 +338,7 @@ Submitted: ${new Date().toLocaleString()}`)
                       </Button>
 
                       <p className="text-sm text-muted-foreground text-center">
-                        We'll never share your information. You can unsubscribe at any time.
+                        We&apos;ll never share your information. You can unsubscribe at any time.
                       </p>
                     </form>
                   ) : (
@@ -349,9 +349,9 @@ Submitted: ${new Date().toLocaleString()}`)
                       transition={{ type: "spring", stiffness: 200 }}
                     >
                       <CheckCircle className="text-green-500 w-16 h-16 mx-auto mb-4" />
-                      <h3 className="text-2xl font-bold mb-2">You're on the list!</h3>
+                      <h3 className="text-2xl font-bold mb-2">You&apos;re on the list!</h3>
                       <p className="text-muted-foreground mb-4">
-                        Thank you for joining. We'll send you updates about our launch and exclusive early access.
+                        Thank you for joining. We&apos;ll send you updates about our launch and exclusive early access.
                       </p>
                       <Button variant="outline" onClick={() => setIsSubmitted(false)}>
                         Submit Another
@@ -439,9 +439,9 @@ Submitted: ${new Date().toLocaleString()}`)
             <div>
               <h4 className="font-semibold mb-4">Quick Links</h4>
               <div className="space-y-2 text-sm">
-                <div><a href="/" className="text-muted-foreground hover:text-foreground transition-colors">Home</a></div>
-                <div><a href="/companies" className="text-muted-foreground hover:text-foreground transition-colors">For Companies</a></div>
-                <div><a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</a></div>
+                <div><Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">Home</Link></div>
+                <div><Link href="/companies" className="text-muted-foreground hover:text-foreground transition-colors">For Companies</Link></div>
+                <div><Link href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</Link></div>
               </div>
             </div>
             <div>

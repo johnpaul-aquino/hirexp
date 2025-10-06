@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Users, DollarSign, TrendingUp, UserCheck, Search, Filter } from 'lucide-react'
+import { Users, DollarSign, TrendingUp, UserCheck, Search } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { CandidateCard } from '@/components/dashboard/candidate-card'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -140,8 +139,8 @@ export default function CompanyDashboard() {
 
               {/* Candidates Grid */}
               <div className="grid md:grid-cols-2 gap-4">
-                {filteredCandidates.map((candidate, index) => (
-                  <BlurFade key={candidate.id} delay={0.5 + index * 0.05}>
+                {filteredCandidates.map((candidate) => (
+                  <BlurFade key={candidate.id} delay={0.5}>
                     <CandidateCard
                       {...candidate}
                       onViewProfile={() => console.log('View profile', candidate.id)}
@@ -182,7 +181,7 @@ export default function CompanyDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentHires.map((hire, index) => (
+                {recentHires.map((hire) => (
                   <div
                     key={hire.candidateId}
                     className="flex items-center justify-between p-4 border rounded-lg hover:border-foreground/50 transition-all duration-300"

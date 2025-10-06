@@ -24,15 +24,12 @@ const navItems = [
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
   const [activeSection, setActiveSection] = useState('')
   const [showWaitlistModal, setShowWaitlistModal] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-
       // Track active section for anchor links and homepage sections
       const sections = ['how-it-works', 'faq', 'job-seekers', 'companies']
       const scrollPosition = window.scrollY + window.innerHeight / 2 // Center of viewport
@@ -353,7 +350,7 @@ export function Navigation() {
                     <GraduationCap className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1">I'm a Job Seeker</h3>
+                    <h3 className="font-semibold text-lg mb-1">I&apos;m a Job Seeker</h3>
                     <p className="text-sm text-muted-foreground">
                       Get free AI-powered training and connect with hiring companies
                     </p>
@@ -373,7 +370,7 @@ export function Navigation() {
                     <Briefcase className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1">I'm Hiring Talent</h3>
+                    <h3 className="font-semibold text-lg mb-1">I&apos;m Hiring Talent</h3>
                     <p className="text-sm text-muted-foreground">
                       Access pre-trained, job-ready candidates and reduce hiring costs
                     </p>

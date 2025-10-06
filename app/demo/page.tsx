@@ -127,7 +127,7 @@ export default function DemoPage() {
             <div className="flex justify-center">
               <ShineBorder
                 className="relative flex h-[200px] w-full max-w-lg flex-col items-center justify-center overflow-hidden rounded-lg border bg-background md:shadow-xl"
-                color={["#A07CFE", "#FE8FB5", "#FFBE7B"]}
+                shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]}
               >
                 <span className="text-lg font-semibold">Glossy Shine Effect</span>
               </ShineBorder>

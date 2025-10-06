@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, Briefcase, GraduationCap, CheckCircle, Users, Award, ChevronDown, BookOpen, MessageSquare, Video } from 'lucide-react'
+import { ArrowRight, Briefcase, GraduationCap, CheckCircle, Award, ChevronDown, BookOpen, MessageSquare, Video } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ShineBorder } from '@/components/ui/shine-border'
 import { LightRays } from '@/components/ui/light-rays'
@@ -50,33 +50,6 @@ export default function Home() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  const features = [
-    {
-      icon: GraduationCap,
-      title: "For Job Seekers",
-      description: "Free AI-powered English training to launch your call center career",
-      link: "/trainees"
-    },
-    {
-      icon: Briefcase,
-      title: "For Companies",
-      description: "Access pre-trained, job-ready talent and reduce hiring costs by 70%",
-      link: "/companies"
-    },
-    {
-      icon: Users,
-      title: "AI-Powered Learning",
-      description: "Personalized training modules with real-time feedback and assessment",
-      link: "/trainees"
-    },
-    {
-      icon: Award,
-      title: "Pre-Vetted Candidates",
-      description: "Every candidate comes with verified skills, performance data, and certificates",
-      link: "/companies"
-    }
-  ]
 
   const stats = [
     { label: "Trained Candidates", value: "500+" },
@@ -171,13 +144,13 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/trainees">
                 <Button size="lg" className="text-base px-8 h-12">
-                  I'm Looking for a Job
+                  I&apos;m Looking for a Job
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
               <Link href="/companies">
                 <Button size="lg" variant="outline" className="text-base px-8 h-12">
-                  I'm Hiring Talent
+                  I&apos;m Hiring Talent
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -470,7 +443,7 @@ export default function Home() {
               Ready to Get Started?
             </h2>
             <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Join the revolution in call center hiring. Whether you're starting your career or building your team.
+              Join the revolution in call center hiring. Whether you&apos;re starting your career or building your team.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/trainees">
@@ -544,13 +517,13 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/trainees#signup">
                 <Button size="lg" className="text-base px-8 h-12 w-full sm:w-auto">
-                  I'm a Job Seeker
+                  I&apos;m a Job Seeker
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
               <Link href="/companies#partner">
                 <Button size="lg" variant="outline" className="text-base px-8 h-12 w-full sm:w-auto">
-                  I'm a Company
+                  I&apos;m a Company
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>

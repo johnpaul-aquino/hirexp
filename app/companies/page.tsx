@@ -301,7 +301,7 @@ Submitted: ${new Date().toLocaleString()}`)
                   </Button>
 
                   <p className="text-sm text-muted-foreground text-center">
-                    We'll contact you with exclusive partnership details and early access information.
+                    We&apos;ll contact you with exclusive partnership details and early access information.
                   </p>
                 </form>
               ) : (
@@ -309,7 +309,7 @@ Submitted: ${new Date().toLocaleString()}`)
                   <CheckCircle className="text-green-500 w-16 h-16 mx-auto mb-4" />
                   <h3 className="text-2xl font-bold mb-2">Thank you for your interest!</h3>
                   <p className="text-muted-foreground mb-6">
-                    We've received your partnership request. Our team will reach out shortly with more details.
+                    We&apos;ve received your partnership request. Our team will reach out shortly with more details.
                   </p>
                   <Button variant="outline" onClick={() => setIsSubmitted(false)}>
                     Submit Another
@@ -372,8 +372,8 @@ Submitted: ${new Date().toLocaleString()}`)
             <div>
               <h4 className="font-semibold mb-4">Quick Links</h4>
               <div className="space-y-2 text-sm">
-                <div><a href="/" className="text-muted-foreground hover:text-foreground transition-colors">Home</a></div>
-                <div><a href="/trainees" className="text-muted-foreground hover:text-foreground transition-colors">For Job Seekers</a></div>
+                <div><Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">Home</Link></div>
+                <div><Link href="/trainees" className="text-muted-foreground hover:text-foreground transition-colors">For Job Seekers</Link></div>
               </div>
             </div>
           </div>

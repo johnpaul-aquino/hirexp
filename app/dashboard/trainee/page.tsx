@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { BookOpen, MessageSquare, Video, Keyboard, Phone, Trophy, Clock, Target, Zap, CheckCircle2, AlertCircle } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { ModuleCard } from '@/components/dashboard/module-card'
