@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { ConditionalNavigation } from '@/components/conditional-navigation'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -8,8 +9,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Next.js Boilerplate with Magic UI',
-  description: 'A modern Next.js 15.5 boilerplate with Magic UI components',
+  title: 'HireXp - Train Free, Hire Smart',
+  description: 'Free AI-powered English training for call center careers. Connect pre-trained talent with hiring companies.',
 }
 
 export default function RootLayout({
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <ConditionalNavigation />
         {children}
       </body>
     </html>
