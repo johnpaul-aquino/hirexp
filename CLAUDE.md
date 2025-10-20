@@ -182,3 +182,4 @@ Components go in `components/ui/` and can be imported via `@/components/ui/[name
 - **`components/ui/`** - shadcn/ui and MagicUI components
 - **`lib/`** - Utility functions (e.g., `utils.ts` with `cn()` helper)
 - **`.claude/agents/`** - Custom agent configurations for Claude Code
+- In our development use hooks and store pattern, we will use zustand

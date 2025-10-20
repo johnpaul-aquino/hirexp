@@ -1,0 +1,545 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTICATION & USER MODELS
+// ============================================
+
+enum UserRole {
+  TRAINEE
+  INSTRUCTOR
+  COMPANY
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+  PENDING_VERIFICATION
+}
+
+model User {
+  id                String        @id @default(cuid())
+  email             String        @unique @db.VarChar(255)
+  emailVerified     DateTime?
+  password          String?       // Null for OAuth users
+  role              UserRole      @default(TRAINEE)
+  status            AccountStatus @default(PENDING_VERIFICATION)
+  lastLoginAt       DateTime?
+  failedLoginAttempts Int         @default(0)
+  lockedUntil       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relationships
+  profile           Profile?
+  accounts          Account[]     // OAuth accounts
+  sessions          Session[]     // Active sessions
+  verificationTokens VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs         AuditLog[]    // Actions performed by user
+  targetAuditLogs   AuditLog[]    @relation("TargetUser") // Actions performed on user
+
+  // Feature relationships
+  chatSessions      ChatSession[]
+  callSessions      CallSession[]
+  assessments       Assessment[]
+  progress          UserProgress?
+  evaluations       Evaluation[]
+  certificates      Certificate[]
+
+  // Role-specific relationships
+  instructorProfile InstructorProfile?
+  companyProfile    CompanyProfile?
+  adminProfile      AdminProfile?
+
+  // Content created (for instructors)
+  createdContent    Content[]     @relation("ContentCreator")
+
+  // Company relationships
+  companyViews      CandidateView[] @relation("ViewedCandidate")
+  viewedByCompanies CandidateView[] @relation("ViewingCompany")
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model Profile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  name              String?   @db.VarChar(255)
+  avatar            String?   @db.Text
+  bio               String?   @db.Text
+  phone             String?   @db.VarChar(20)
+  dateOfBirth       DateTime?
+  gender            String?
+  location          String?
+  timezone          String?   @default("UTC")
+  languages         String[]  // Array of language codes
+  skills            String[]
+  experience        String?   @db.Text
+  education         String?   @db.Text
+  linkedIn          String?
+  github            String?
+  website           String?
+
+  // Preferences
+  preferences       Json      @default("{}")
+  // Example: {
+  //   emailNotifications: true,
+  //   smsNotifications: false,
+  //   marketingEmails: true,
+  //   theme: "light",
+  //   language: "en"
+  // }
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// Role-specific profiles
+model InstructorProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  specializations   String[]  // Areas of expertise
+  certifications    String[]  // Teaching certifications
+  yearsOfExperience Int?
+  rating            Float     @default(0)
+  totalStudents     Int       @default(0)
+  totalHours        Int       @default(0)
+  isVerified        Boolean   @default(false)
+  verifiedAt        DateTime?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("instructor_profiles")
+}
+
+model CompanyProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  companyName       String    @db.VarChar(255)
+  companyLogo       String?
+  industry          String?
+  companySize       String?   // e.g., "1-10", "11-50", "51-200"
+  website           String?
+  description       String?   @db.Text
+  address           String?
+  country           String?
+  isVerified        Boolean   @default(false)
+  verifiedAt        DateTime?
+  hiringQuota       Int       @default(10) // Monthly hiring limit
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostings       JobPosting[]
+
+  @@map("company_profiles")
+}
+
+model AdminProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  department        String?
+  accessLevel       Int       @default(1) // 1: Basic, 2: Senior, 3: Super Admin
+  permissions       String[]  // Granular permissions
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_profiles")
+}
+
+// ============================================
+// NEXTAUTH MODELS
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  ipAddress    String?
+  userAgent    String?
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  userId     String
+  email      String
+  token      String   @unique
+  expires    DateTime
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([email, token])
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     String
+  email      String
+  token      String   @unique
+  expires    DateTime
+  used       Boolean  @default(false)
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([email, token])
+  @@map("password_reset_tokens")
+}
+
+// ============================================
+// AUDIT & SECURITY
+// ============================================
+
+enum AuditAction {
+  // Authentication actions
+  SIGN_IN
+  SIGN_OUT
+  SIGN_UP
+  PASSWORD_RESET
+  PASSWORD_CHANGED
+  EMAIL_VERIFIED
+
+  // Profile actions
+  PROFILE_UPDATED
+  AVATAR_CHANGED
+
+  // Admin actions
+  ROLE_CHANGED
+  USER_SUSPENDED
+  USER_ACTIVATED
+  USER_DELETED
+
+  // Permission actions
+  PERMISSION_GRANTED
+  PERMISSION_REVOKED
+
+  // Content actions
+  CONTENT_CREATED
+  CONTENT_UPDATED
+  CONTENT_DELETED
+
+  // System actions
+  SETTINGS_CHANGED
+  API_KEY_CREATED
+  API_KEY_REVOKED
+}
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  userId       String?     // Who performed the action
+  targetUserId String?     // Who was affected (if applicable)
+  action       AuditAction
+  details      Json        // Additional context
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime    @default(now())
+
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  targetUser   User?       @relation("TargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// FEATURE MODELS (AI Training)
+// ============================================
+
+model ChatSession {
+  id                String    @id @default(cuid())
+  userId            String
+  topic             String
+  difficulty        String
+  status            SessionStatus @default(ACTIVE)
+  startedAt         DateTime  @default(now())
+  endedAt           DateTime?
+  duration          Int?      // in seconds
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages          ChatMessage[]
+  evaluation        Evaluation?
+
+  @@index([userId])
+  @@index([status])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id                String    @id @default(cuid())
+  sessionId         String
+  role              MessageRole
+  content           String    @db.Text
+  audioUrl          String?
+  timestamp         DateTime  @default(now())
+
+  session           ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("chat_messages")
+}
+
+model CallSession {
+  id                String    @id @default(cuid())
+  userId            String
+  scenario          String
+  difficulty        String
+  status            SessionStatus @default(ACTIVE)
+  startedAt         DateTime  @default(now())
+  endedAt           DateTime?
+  duration          Int?      // in seconds
+  recordingUrl      String?
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcript        CallTranscript[]
+  evaluation        Evaluation?
+
+  @@index([userId])
+  @@index([status])
+  @@map("call_sessions")
+}
+
+model CallTranscript {
+  id                String    @id @default(cuid())
+  sessionId         String
+  speaker           String    // "user" or "ai"
+  text              String    @db.Text
+  timestamp         DateTime  @default(now())
+
+  session           CallSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("call_transcripts")
+}
+
+model Assessment {
+  id                String    @id @default(cuid())
+  userId            String
+  type              String    // "grammar", "vocabulary", "reading", etc.
+  score             Float
+  totalQuestions    Int
+  correctAnswers    Int
+  timeTaken         Int       // in seconds
+  completedAt       DateTime  @default(now())
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@map("assessments")
+}
+
+model Evaluation {
+  id                String    @id @default(cuid())
+  userId            String
+  sessionType       SessionType
+  sessionId         String    @unique
+  scores            Json      // Detailed scoring metrics
+  feedback          Json      // AI-generated feedback
+  strengths         String[]
+  improvements      String[]
+  overallScore      Float
+  createdAt         DateTime  @default(now())
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatSession       ChatSession? @relation(fields: [sessionId], references: [id], map: "eval_chat_session_fk")
+  callSession       CallSession? @relation(fields: [sessionId], references: [id], map: "eval_call_session_fk")
+
+  @@index([userId])
+  @@map("evaluations")
+}
+
+model UserProgress {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  overallProgress   Float    @default(0)
+  certificateProgress Float  @default(0)
+  totalTimeSpent    Int      @default(0) // in seconds
+  modulesCompleted  Int      @default(0)
+  currentStreak     Int      @default(0)
+  longestStreak     Int      @default(0)
+  lastActivityDate  DateTime?
+  level             String   @default("beginner")
+  points            Int      @default(0)
+  badges            String[] // Badge IDs earned
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_progress")
+}
+
+model Certificate {
+  id                String   @id @default(cuid())
+  userId            String
+  certificateCode   String   @unique
+  issuedAt          DateTime @default(now())
+  validUntil        DateTime?
+  skills            Json     // Verified skills and scores
+  overallScore      Float
+  verificationUrl   String   // Public URL for verification
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([certificateCode])
+  @@map("certificates")
+}
+
+// ============================================
+// CONTENT MANAGEMENT (for Instructors)
+// ============================================
+
+model Content {
+  id                String   @id @default(cuid())
+  creatorId         String   // Instructor who created
+  title             String
+  description       String?  @db.Text
+  type              ContentType
+  category          String
+  difficulty        String
+  data              Json     // Content data (questions, scenarios, etc.)
+  isPublished       Boolean  @default(false)
+  publishedAt       DateTime?
+  views             Int      @default(0)
+  rating            Float    @default(0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  creator           User     @relation("ContentCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([creatorId])
+  @@index([type])
+  @@index([isPublished])
+  @@map("content")
+}
+
+// ============================================
+// COMPANY FEATURES
+// ============================================
+
+model JobPosting {
+  id                String   @id @default(cuid())
+  companyId         String
+  title             String
+  description       String   @db.Text
+  requirements      String[]
+  requiredSkills    String[]
+  experienceLevel   String
+  location          String?
+  salary            String?
+  isActive          Boolean  @default(true)
+  applicants        Int      @default(0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  company           CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([isActive])
+  @@map("job_postings")
+}
+
+model CandidateView {
+  id                String   @id @default(cuid())
+  candidateId       String   // Trainee being viewed
+  companyUserId     String   // Company user viewing
+  viewedAt          DateTime @default(now())
+  notes             String?  @db.Text
+  isInterested      Boolean @default(false)
+
+  candidate         User     @relation("ViewedCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
+  companyUser       User     @relation("ViewingCompany", fields: [companyUserId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, companyUserId])
+  @@index([candidateId])
+  @@index([companyUserId])
+  @@map("candidate_views")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum SessionType {
+  CHAT
+  CALL
+}
+
+enum ContentType {
+  CHAT_SCENARIO
+  CALL_SCENARIO
+  ASSESSMENT
+  LESSON
+  EXERCISE
+}
