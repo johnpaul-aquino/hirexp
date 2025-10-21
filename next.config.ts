@@ -1,7 +1,8 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  // Removed 'output: export' to enable server-side features
+  // (API routes, database connections, authentication)
   images: {
     unoptimized: true,
   },

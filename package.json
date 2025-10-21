@@ -8,7 +8,18 @@
     "build": "next build",
     "export": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:build": "docker compose build",
+    "docker:rebuild": "docker compose up -d --build",
+    "docker:logs": "docker compose logs -f",
+    "docker:logs:app": "docker compose logs -f app",
+    "docker:db:migrate": "docker compose exec app npx prisma migrate dev",
+    "docker:db:studio": "docker compose exec app npx prisma studio",
+    "docker:db:seed": "docker compose exec app npx prisma db seed",
+    "docker:db:reset": "docker compose exec app npx prisma migrate reset",
+    "docker:clean": "docker compose down -v"
   },
   "keywords": [
     "nextjs",
