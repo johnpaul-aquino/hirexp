@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Database, Mail, Bell, Globe, Shield, Lock, Users } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Database, Mail, Bell, Globe, Shield, Lock, Users, Navigation } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -26,6 +26,15 @@ interface PagePermission {
   roles: Role[]
 }
 
+interface NavigationItem {
+  id: string
+  navigationKey: string
+  label: string
+  href: string
+  isEnabled: boolean
+  displayOrder: number
+}
+
 export function AdminSettings() {
   const [pagePermissions, setPagePermissions] = useState<PagePermission[]>([
     { page: 'Dashboard', path: '/dashboard', roles: ['TRAINEE', 'INSTRUCTOR', 'COMPANY', 'ADMIN'] },
@@ -41,7 +50,30 @@ export function AdminSettings() {
     { page: 'Analytics', path: '/dashboard/company/analytics', roles: ['COMPANY', 'ADMIN'] },
   ])
 
+  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([])
+  const [isLoadingNav, setIsLoadingNav] = useState(true)
+
   const roles: Role[] = ['TRAINEE', 'INSTRUCTOR', 'COMPANY', 'ADMIN']
+
+  // Fetch navigation items on component mount
+  useEffect(() => {
+    fetchNavigationItems()
+  }, [])
+
+  const fetchNavigationItems = async () => {
+    try {
+      setIsLoadingNav(true)
+      const response = await fetch('/api/admin/navigation?role=TRAINEE')
+      if (response.ok) {
+        const data = await response.json()
+        setNavigationItems(data.navigationItems || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch navigation items:', error)
+    } finally {
+      setIsLoadingNav(false)
+    }
+  }
 
   const togglePermission = (pageIndex: number, role: Role) => {
     setPagePermissions(prev => {
@@ -56,6 +88,35 @@ export function AdminSettings() {
 
       return updated
     })
+  }
+
+  const toggleNavigationVisibility = async (navKey: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch('/api/admin/navigation', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          role: 'TRAINEE',
+          navigationKey: navKey,
+          isEnabled: !currentStatus,
+        }),
+      })
+
+      if (response.ok) {
+        // Update local state
+        setNavigationItems(prev =>
+          prev.map(item =>
+            item.navigationKey === navKey
+              ? { ...item, isEnabled: !currentStatus }
+              : item
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Failed to update navigation visibility:', error)
+    }
   }
 
   return (
@@ -239,6 +300,74 @@ export function AdminSettings() {
             <p>
               Check the boxes to grant access to specific pages for each role.
               Admin role always has full access to all pages.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Trainee Navigation Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Navigation className="h-5 w-5" />
+            Trainee Navigation Management
+          </CardTitle>
+          <CardDescription>
+            Enable or disable navigation items for trainee dashboards
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">Navigation Item</TableHead>
+                  <TableHead className="w-[300px]">Path</TableHead>
+                  <TableHead className="text-center">Enabled</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingNav ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                      Loading navigation items...
+                    </TableCell>
+                  </TableRow>
+                ) : navigationItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                      No navigation items found. Please run database migrations.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  navigationItems
+                    .sort((a, b) => a.displayOrder - b.displayOrder)
+                    .map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.label}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground font-mono">
+                          {item.href}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            <Switch
+                              checked={item.isEnabled}
+                              onCheckedChange={() => toggleNavigationVisibility(item.navigationKey, item.isEnabled)}
+                              disabled={item.navigationKey === 'dashboard'} // Dashboard is always enabled
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <Navigation className="h-4 w-4" />
+            <p>
+              Toggle switches to show or hide navigation items in the trainee sidebar.
+              Dashboard is always visible and cannot be disabled.
             </p>
           </div>
         </CardContent>

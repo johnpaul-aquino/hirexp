@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -20,7 +20,8 @@ import {
   Menu,
   X,
   Shield,
-  Lock
+  Lock,
+  LucideIcon
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -28,14 +29,28 @@ interface SidebarProps {
   type: 'trainee' | 'company' | 'admin'
 }
 
-const traineeNavItems = [
+interface NavItem {
+  icon: LucideIcon
+  label: string
+  href: string
+}
+
+// Icon mapping for navigation keys
+const iconMap: Record<string, LucideIcon> = {
+  dashboard: Home,
+  assessments: BookOpen,
+  chat: MessageSquare,
+  interview: Video,
+  typing: Keyboard,
+  'mock-call': Phone,
+  certificate: Award,
+}
+
+// Default navigation items (fallback if API fails)
+const defaultTraineeNavItems: NavItem[] = [
   { icon: Home, label: 'Dashboard', href: '/dashboard/trainee' },
-  { icon: BookOpen, label: 'English Assessments', href: '/dashboard/trainee/assessments' },
   { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/trainee/chat' },
-  { icon: Video, label: 'AI Interview', href: '/dashboard/trainee/interview' },
-  { icon: Keyboard, label: 'Typing Test', href: '/dashboard/trainee/typing' },
   { icon: Phone, label: 'Mock Call', href: '/dashboard/trainee/mock-call' },
-  { icon: Award, label: 'Certificate', href: '/dashboard/trainee/certificate' },
 ]
 
 const companyNavItems = [
@@ -56,6 +71,46 @@ const adminNavItems = [
 export function Sidebar({ type }: SidebarProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const [traineeNavItems, setTraineeNavItems] = useState<NavItem[]>(defaultTraineeNavItems)
+  const [isLoadingNav, setIsLoadingNav] = useState(type === 'trainee')
+
+  // Fetch navigation items for trainee role
+  useEffect(() => {
+    if (type === 'trainee') {
+      fetchNavigationItems()
+    }
+  }, [type])
+
+  const fetchNavigationItems = async () => {
+    try {
+      setIsLoadingNav(true)
+      const response = await fetch('/api/navigation')
+
+      if (response.ok) {
+        const data = await response.json()
+
+        // Map API response to NavItem format
+        const mappedItems: NavItem[] = data.navigationItems.map((item: any) => ({
+          icon: iconMap[item.navigationKey] || Home,
+          label: item.label,
+          href: item.href,
+        }))
+
+        setTraineeNavItems(mappedItems)
+      } else {
+        // Use default items on error
+        console.error('Failed to fetch navigation items, using defaults')
+        setTraineeNavItems(defaultTraineeNavItems)
+      }
+    } catch (error) {
+      console.error('Error fetching navigation items:', error)
+      // Use default items on error
+      setTraineeNavItems(defaultTraineeNavItems)
+    } finally {
+      setIsLoadingNav(false)
+    }
+  }
+
   const navItems = type === 'trainee'
     ? traineeNavItems
     : type === 'company'
