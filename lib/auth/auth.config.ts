@@ -1,13 +1,12 @@
-import type { NextAuthConfig } from 'next-auth'
+import type { NextAuthOptions } from 'next-auth'
 import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
-import { PrismaAdapter } from '@auth/prisma-adapter'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { UserRole } from '@prisma/client'
-import { refreshAccessToken } from './refresh-token'
 
-export const authConfig: NextAuthConfig = {
+export const authConfig: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     // Google OAuth Provider
@@ -141,41 +140,27 @@ export const authConfig: NextAuthConfig = {
             where: { email: profile?.email },
           })
 
-          if (!existingUser) {
-            // Create new user with Google account
-            await prisma.user.create({
-              data: {
-                email: profile?.email!,
-                emailVerified: new Date(),
-                role: UserRole.TRAINEE, // Default role
-                status: 'ACTIVE',
-                profile: {
-                  create: {
-                    name: profile?.name,
-                    avatar: (profile as any)?.picture,
-                  },
-                },
-              },
-            })
-          } else {
+          if (existingUser) {
             // Update last login for existing user
             await prisma.user.update({
               where: { id: existingUser.id },
               data: { lastLoginAt: new Date() },
             })
-          }
 
-          // Log the sign-in
-          await prisma.auditLog.create({
-            data: {
-              userId: existingUser?.id || user.id,
-              action: 'SIGN_IN',
-              details: {
-                provider: account.provider,
-                isNewUser: !existingUser,
+            // Log the sign-in for existing users
+            await prisma.auditLog.create({
+              data: {
+                userId: existingUser.id,
+                action: 'SIGN_IN',
+                details: {
+                  provider: account.provider,
+                  isNewUser: false,
+                },
               },
-            },
-          })
+            })
+          }
+          // For new users, PrismaAdapter handles user creation automatically
+          // We'll log their first sign-in in the jwt callback instead
         } catch (error) {
           console.error('Error during Google sign-in:', error)
           return false
@@ -185,7 +170,7 @@ export const authConfig: NextAuthConfig = {
       return true
     },
 
-    async jwt({ token, user, account, trigger, session }) {
+    async jwt({ token, user, trigger, session, account }) {
       if (trigger === 'update' && session) {
         // Handle session updates
         token = { ...token, ...session }
@@ -193,25 +178,43 @@ export const authConfig: NextAuthConfig = {
 
       if (user) {
         token.id = user.id
-        token.role = user.role
         token.email = user.email
-      }
+        token.name = user.name
 
-      // Refresh token rotation for OAuth
-      if (account) {
-        token.accessToken = account.access_token
-        token.refreshToken = account.refresh_token
-        token.expiresAt = account.expires_at
-      }
+        // For new Google OAuth users, set up their account
+        if (account?.provider === 'google' && !user.role) {
+          try {
+            // Update user with default role and status
+            const updatedUser = await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                role: UserRole.TRAINEE,
+                status: 'ACTIVE',
+              },
+            })
 
-      // Check if token needs refresh (for OAuth)
-      if (token.expiresAt && token.refreshToken) {
-        if (Date.now() < (token.expiresAt as number) * 1000 - 5 * 60 * 1000) {
-          return token
+            // Create profile if it doesn't exist
+            await prisma.profile.upsert({
+              where: { userId: user.id },
+              create: {
+                userId: user.id,
+                name: user.name || '',
+                avatar: user.image,
+              },
+              update: {
+                name: user.name || '',
+                avatar: user.image,
+              },
+            })
+
+            token.role = updatedUser.role
+          } catch (error) {
+            console.error('Error setting up new OAuth user:', error)
+            token.role = UserRole.TRAINEE // fallback
+          }
+        } else {
+          token.role = user.role
         }
-
-        // Refresh the token
-        return await refreshAccessToken(token)
       }
 
       return token
@@ -222,11 +225,8 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id as string
         session.user.role = token.role as UserRole
         session.user.email = token.email as string
+        session.user.name = token.name as string | null | undefined
       }
-
-      // Add custom properties to session
-      ;(session as any).accessToken = token.accessToken as string
-      ;(session as any).error = token.error as string
 
       return session
     },
@@ -241,51 +241,51 @@ export const authConfig: NextAuthConfig = {
     },
   },
 
-  events: {
-    async signIn({ user, account, isNewUser }) {
-      // Log authentication event
-      try {
-        await prisma.auditLog.create({
-          data: {
-            userId: user.id!,
-            action: 'SIGN_IN',
-            details: {
-              provider: account?.provider || 'credentials',
-              isNewUser: !!isNewUser,
-            },
-          },
-        })
-      } catch (error) {
-        console.error('Error logging sign-in event:', error)
-      }
-    },
+  // events: {
+  //   async signIn({ user, account, isNewUser }) {
+  //     // Log authentication event
+  //     try {
+  //       await prisma.auditLog.create({
+  //         data: {
+  //           userId: user.id!,
+  //           action: 'SIGN_IN',
+  //           details: {
+  //             provider: account?.provider || 'credentials',
+  //             isNewUser: !!isNewUser,
+  //           },
+  //         },
+  //       })
+  //     } catch (error) {
+  //       console.error('Error logging sign-in event:', error)
+  //     }
+  //   },
 
-    async signOut({ token }) {
-      // Log sign-out event
-      try {
-        if (token?.id) {
-          await prisma.auditLog.create({
-            data: {
-              userId: token.id as string,
-              action: 'SIGN_OUT',
-              details: {},
-            },
-          })
-        }
-      } catch (error) {
-        console.error('Error logging sign-out event:', error)
-      }
-    },
+  //   async signOut({ token }) {
+  //     // Log sign-out event
+  //     try {
+  //       if (token?.id) {
+  //         await prisma.auditLog.create({
+  //           data: {
+  //             userId: token.id as string,
+  //             action: 'SIGN_OUT',
+  //             details: {},
+  //           },
+  //         })
+  //       }
+  //     } catch (error) {
+  //       console.error('Error logging sign-out event:', error)
+  //     }
+  //   },
 
-    async createUser({ user }) {
-      // You can send a welcome email here
-      console.log('New user created:', user.email)
-    },
+  //   async createUser({ user }) {
+  //     // You can send a welcome email here
+  //     console.log('New user created:', user.email)
+  //   },
 
-    async updateUser({ user }) {
-      console.log('User updated:', user.id)
-    },
-  },
+  //   async updateUser({ user }) {
+  //     console.log('User updated:', user.id)
+  //   },
+  // },
 
   debug: process.env.NODE_ENV === 'development',
 }

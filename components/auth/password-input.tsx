@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, forwardRef } from 'react'
-import { Input } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'

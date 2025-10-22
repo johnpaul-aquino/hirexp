@@ -1,8 +1,12 @@
 import { z } from 'zod'
 import { UserRole } from '@prisma/client'
 
-// Password validation regex
+// Password validation regexes
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+const hasUppercase = /[A-Z]/
+const hasLowercase = /[a-z]/
+const hasNumber = /\d/
+const hasSpecialChar = /[@$!%*?&]/
 
 // Login schema
 export const loginSchema = z.object({
@@ -26,10 +30,10 @@ export const registerSchema = z
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters')
-      .regex(
-        passwordRegex,
-        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-      ),
+      .regex(hasUppercase, 'Password must contain at least one uppercase letter')
+      .regex(hasLowercase, 'Password must contain at least one lowercase letter')
+      .regex(hasNumber, 'Password must contain at least one number')
+      .regex(hasSpecialChar, 'Password must contain at least one special character'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
     name: z
       .string()
@@ -86,10 +90,10 @@ export const passwordChangeSchema = z
     newPassword: z
       .string()
       .min(8, 'Password must be at least 8 characters')
-      .regex(
-        passwordRegex,
-        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-      ),
+      .regex(hasUppercase, 'Password must contain at least one uppercase letter')
+      .regex(hasLowercase, 'Password must contain at least one lowercase letter')
+      .regex(hasNumber, 'Password must contain at least one number')
+      .regex(hasSpecialChar, 'Password must contain at least one special character'),
     confirmNewPassword: z.string().min(1, 'Please confirm your new password'),
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
@@ -120,10 +124,10 @@ export const resetPasswordSchema = z
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters')
-      .regex(
-        passwordRegex,
-        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-      ),
+      .regex(hasUppercase, 'Password must contain at least one uppercase letter')
+      .regex(hasLowercase, 'Password must contain at least one lowercase letter')
+      .regex(hasNumber, 'Password must contain at least one number')
+      .regex(hasSpecialChar, 'Password must contain at least one special character'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine((data) => data.password === data.confirmPassword, {

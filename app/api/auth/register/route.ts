@@ -3,14 +3,31 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { registerSchema } from '@/lib/validations/auth'
 import { z } from 'zod'
-import { UserRole } from '@prisma/client'
+import { UserRole, AccountStatus } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
     // Validate request body
-    const validatedData = registerSchema.parse(body)
+    const validation = registerSchema.safeParse(body)
+
+    if (!validation.success) {
+      // Zod uses 'issues' property, not 'errors'
+      const errors = validation.error?.issues || []
+      const firstError = errors[0]
+
+      return NextResponse.json(
+        {
+          error: 'Validation error',
+          message: firstError?.message || 'Validation failed',
+          errors: errors
+        },
+        { status: 400 }
+      )
+    }
+
+    const validatedData = validation.data
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -33,7 +50,7 @@ export async function POST(req: NextRequest) {
         email: validatedData.email,
         password: hashedPassword,
         role: validatedData.role,
-        status: 'PENDING_VERIFICATION',
+        status: AccountStatus.PENDING_VERIFICATION,
         profile: {
           create: {
             name: validatedData.name,
@@ -84,8 +101,14 @@ export async function POST(req: NextRequest) {
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
+      const errors = error.errors || []
+      const firstError = errors.length > 0 ? errors[0] : null
       return NextResponse.json(
-        { error: 'Validation error', message: error.errors[0].message },
+        {
+          error: 'Validation error',
+          message: firstError?.message || 'Validation failed',
+          errors: errors
+        },
         { status: 400 }
       )
     }

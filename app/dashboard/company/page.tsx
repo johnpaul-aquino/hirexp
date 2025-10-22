@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Users, DollarSign, TrendingUp, UserCheck, Search } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { CandidateCard } from '@/components/dashboard/candidate-card'
+import { ProfileAvatar } from '@/components/dashboard/profile-avatar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -45,9 +46,12 @@ export default function CompanyDashboard() {
                 Access pre-trained candidates and track your hiring metrics
               </p>
             </div>
-            <Badge className="text-base px-4 py-2" variant="outline">
-              Partner Since {new Date(company.partnerSince).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
-            </Badge>
+            <div className="flex items-center gap-4">
+              <Badge className="text-base px-4 py-2" variant="outline">
+                Partner Since {new Date(company.partnerSince).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+              </Badge>
+              <ProfileAvatar />
+            </div>
           </div>
         </BlurFade>
 

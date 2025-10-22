@@ -5,6 +5,7 @@ import { StatCard } from '@/components/dashboard/stat-card'
 import { ModuleCard } from '@/components/dashboard/module-card'
 import { ProgressRing } from '@/components/dashboard/progress-ring'
 import { ActivityItem } from '@/components/dashboard/activity-item'
+import { ProfileAvatar } from '@/components/dashboard/profile-avatar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -43,9 +44,12 @@ export default function TraineeDashboard() {
                 Track your progress and continue your journey to becoming job-ready
               </p>
             </div>
-            <Badge className="text-base px-4 py-2" variant="default">
-              {user.level} Level
-            </Badge>
+            <div className="flex items-center gap-4">
+              <Badge className="text-base px-4 py-2" variant="default">
+                {user.level} Level
+              </Badge>
+              <ProfileAvatar />
+            </div>
           </div>
         </BlurFade>
 

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ConditionalNavigation } from '@/components/conditional-navigation'
+import { SessionProvider } from '@/components/providers/session-provider'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -21,8 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ConditionalNavigation />
-        {children}
+        <SessionProvider>
+          <ConditionalNavigation />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   )

@@ -6,10 +6,11 @@ import { Navigation } from '@/components/navigation'
 export function ConditionalNavigation() {
   const pathname = usePathname()
 
-  // Hide navigation on dashboard pages
+  // Hide navigation on dashboard and profile pages
   const isDashboard = pathname?.startsWith('/dashboard')
+  const isProfile = pathname === '/profile'
 
-  if (isDashboard) {
+  if (isDashboard || isProfile) {
     return null
   }
 
