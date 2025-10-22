@@ -18,12 +18,14 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  Shield,
+  Lock
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface SidebarProps {
-  type: 'trainee' | 'company'
+  type: 'trainee' | 'company' | 'admin'
 }
 
 const traineeNavItems = [
@@ -43,10 +45,22 @@ const companyNavItems = [
   { icon: Settings, label: 'Settings', href: '/dashboard/company/settings' },
 ]
 
+const adminNavItems = [
+  { icon: Home, label: 'Dashboard', href: '/dashboard/admin' },
+  { icon: Users, label: 'Users', href: '/dashboard/admin/users' },
+  { icon: Shield, label: 'Roles', href: '/dashboard/admin/roles' },
+  { icon: Lock, label: 'Permissions', href: '/dashboard/admin/permissions' },
+  { icon: Settings, label: 'Settings', href: '/dashboard/admin/settings' },
+]
+
 export function Sidebar({ type }: SidebarProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const navItems = type === 'trainee' ? traineeNavItems : companyNavItems
+  const navItems = type === 'trainee'
+    ? traineeNavItems
+    : type === 'company'
+    ? companyNavItems
+    : adminNavItems
 
   return (
     <>
@@ -82,7 +96,7 @@ export function Sidebar({ type }: SidebarProps) {
               <div className="text-2xl font-bold">HireXp</div>
             </Link>
             <p className="text-sm text-muted-foreground mt-1">
-              {type === 'trainee' ? 'Trainee Portal' : 'Company Portal'}
+              {type === 'trainee' ? 'Trainee Portal' : type === 'company' ? 'Company Portal' : 'Admin Portal'}
             </p>
           </div>
 

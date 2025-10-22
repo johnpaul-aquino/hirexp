@@ -1,14 +1,63 @@
 'use client'
 
-import { Database, Mail, Bell, Globe, Shield } from 'lucide-react'
+import { useState } from 'react'
+import { Database, Mail, Bell, Globe, Shield, Lock, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+
+type Role = 'TRAINEE' | 'INSTRUCTOR' | 'COMPANY' | 'ADMIN'
+
+interface PagePermission {
+  page: string
+  path: string
+  roles: Role[]
+}
 
 export function AdminSettings() {
+  const [pagePermissions, setPagePermissions] = useState<PagePermission[]>([
+    { page: 'Dashboard', path: '/dashboard', roles: ['TRAINEE', 'INSTRUCTOR', 'COMPANY', 'ADMIN'] },
+    { page: 'Trainee Dashboard', path: '/dashboard/trainee', roles: ['TRAINEE', 'ADMIN'] },
+    { page: 'Company Dashboard', path: '/dashboard/company', roles: ['COMPANY', 'ADMIN'] },
+    { page: 'Admin Dashboard', path: '/dashboard/admin', roles: ['ADMIN'] },
+    { page: 'English Assessments', path: '/dashboard/trainee/assessments', roles: ['TRAINEE', 'INSTRUCTOR', 'ADMIN'] },
+    { page: 'AI Chat', path: '/dashboard/trainee/chat', roles: ['TRAINEE', 'INSTRUCTOR', 'ADMIN'] },
+    { page: 'AI Interview', path: '/dashboard/trainee/interview', roles: ['TRAINEE', 'INSTRUCTOR', 'ADMIN'] },
+    { page: 'Typing Test', path: '/dashboard/trainee/typing', roles: ['TRAINEE', 'INSTRUCTOR', 'ADMIN'] },
+    { page: 'Mock Call', path: '/dashboard/trainee/mock-call', roles: ['TRAINEE', 'INSTRUCTOR', 'ADMIN'] },
+    { page: 'Candidate Pool', path: '/dashboard/company/candidates', roles: ['COMPANY', 'ADMIN'] },
+    { page: 'Analytics', path: '/dashboard/company/analytics', roles: ['COMPANY', 'ADMIN'] },
+  ])
+
+  const roles: Role[] = ['TRAINEE', 'INSTRUCTOR', 'COMPANY', 'ADMIN']
+
+  const togglePermission = (pageIndex: number, role: Role) => {
+    setPagePermissions(prev => {
+      const updated = [...prev]
+      const currentRoles = updated[pageIndex].roles
+
+      if (currentRoles.includes(role)) {
+        updated[pageIndex].roles = currentRoles.filter(r => r !== role)
+      } else {
+        updated[pageIndex].roles = [...currentRoles, role]
+      }
+
+      return updated
+    })
+  }
+
   return (
     <div className="space-y-6">
       {/* System Settings */}
@@ -134,6 +183,63 @@ export function AdminSettings() {
               </p>
             </div>
             <Switch defaultChecked />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Role-Based Page Permissions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            Role-Based Page Permissions
+          </CardTitle>
+          <CardDescription>
+            Configure which roles can access specific pages in the platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">Page</TableHead>
+                  <TableHead className="w-[200px]">Path</TableHead>
+                  <TableHead className="text-center">Trainee</TableHead>
+                  <TableHead className="text-center">Instructor</TableHead>
+                  <TableHead className="text-center">Company</TableHead>
+                  <TableHead className="text-center">Admin</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pagePermissions.map((permission, index) => (
+                  <TableRow key={permission.path}>
+                    <TableCell className="font-medium">{permission.page}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground font-mono">
+                      {permission.path}
+                    </TableCell>
+                    {roles.map(role => (
+                      <TableCell key={role} className="text-center">
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={permission.roles.includes(role)}
+                            onCheckedChange={() => togglePermission(index, role)}
+                            disabled={role === 'ADMIN' && permission.path === '/dashboard/admin'}
+                          />
+                        </div>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="h-4 w-4" />
+            <p>
+              Check the boxes to grant access to specific pages for each role.
+              Admin role always has full access to all pages.
+            </p>
           </div>
         </CardContent>
       </Card>
