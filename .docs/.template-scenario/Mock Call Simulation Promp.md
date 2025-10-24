@@ -364,4 +364,4 @@ _(Ending)_ → “Alright, I’ll think about it. Thanks for the info.”
 |Unclear explanation|“I’m not sure I understand. Can you explain that again?”|
 |Too much upselling|“I just want to know the price, not the whole package.”|
 |Confident explanation|“Alright, that makes sense.”|
-|Transparency & honesty|“Thanks for being upfront about that.”|
+|Transparency & honesty|“Thanks for being upfront about that.”|s
